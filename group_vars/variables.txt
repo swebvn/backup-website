@@ -1,0 +1,6 @@
+user_domain: lesbianVT
+server_name: lesbian-flag.com
+mysql_database: lesbianVT_data
+mysql_user: lesbianVT_user
+path: /home/lesbianVT/domains/lesbian-flag.com/public_html
+check_bedrock: false

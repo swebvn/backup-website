@@ -1,0 +1,16 @@
+---
+- name: copy scrip to remote host
+  template:
+    src: templates/check.sh.j2
+    dest: /tmp/check.sh
+    mode: 755
+
+- name: run script to collect info
+  shell: bash /tmp/check.sh
+  ignore_errors: yes
+
+- name: copy file contain variable to localhost
+  synchronize:
+    mode: pull
+    src: /tmp/variables.txt
+    dest: group_vars

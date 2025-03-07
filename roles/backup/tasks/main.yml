@@ -1,0 +1,54 @@
+---
+- include_vars: group_vars/variables.txt
+
+- name: echo timestamp
+  shell: date "+%Y%m%d"
+  register: timestamp
+
+- debug: var=timestamp.stdout_lines
+
+- name: echo disk usage before backup
+  shell: df -h
+  register: diskspace
+
+- debug: var=diskspace.stdout_lines
+
+- name: make sure not exist file *.sql
+  shell: sudo rm -f *.sql
+  args:
+    chdir: '{{path}}'
+
+- name: backup mysql database
+  shell: mysqldump {{mysql_database}} > {{mysql_database}}.sql
+  args:
+    chdir: '{{path}}'
+
+- name: backup source code
+  shell: "zip -r {{path}}/{{timestamp.stdout}}-{{server_name}}.zip * -q -x 'wp-content/cache/*' -x 'wp-content/uploads/backupbuddy_backups/*' -x 'wp-content/ai1wm-backups/*'"
+  register: progress1
+  args:
+    chdir: '{{ path }}'
+  when: check_bedrock == false
+
+- name: backup source code bedrock
+  shell: "zip -r {{path}}/web/{{timestamp.stdout}}-bedrock-{{server_name}}.zip .* -q -x 'web/app/cache/*' -x 'web/app/uploads/backupbuddy_backups/*' -x 'web/app/ai1wm-backups/*'"
+  register: progress2
+  args:
+    chdir: '{{ path }}'
+  when: check_bedrock == true
+
+#- debug: var=progress
+
+- name: echo disk usage affter backup
+  shell: df -h
+  register: diskspace
+
+- debug: var=diskspace.stdout_lines
+
+- debug:
+    msg: "backup was completed, please download source at https://{{server_name}}/{{timestamp.stdout}}-{{server_name}}.zip"
+  when: progress1.changed
+  
+- debug:
+    msg: "backup was completed, please download source at https://{{server_name}}/{{timestamp.stdout}}-bedrock-{{server_name}}.zip"
+  when: progress2.changed
